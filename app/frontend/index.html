@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TennisLog</title>
+  <style>
+    :root {
+      --court: #1e4b3a; --chalk: #f6f7f2; --ink: #16201b; --ball: #cddc39;
+      --line: #d5dbcf; --muted: #5d6b63; --danger: #9b2d1f;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--chalk); color: var(--ink); line-height: 1.5; }
+    header { background: var(--court); color: var(--chalk); padding: 28px 20px; }
+    header h1 { margin: 0; font-size: 1.75rem; letter-spacing: -0.01em; }
+    header p { margin: 4px 0 0; opacity: .8; }
+    main { max-width: 860px; margin: 0 auto; padding: 24px 20px 64px; display: grid; gap: 32px; }
+    h2 { font-size: 1.1rem; margin: 0 0 12px; }
+
+    form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 16px;
+           border-left: 4px solid var(--court); padding-left: 16px; }
+    label { display: grid; gap: 4px; font-size: .9rem; color: var(--muted); }
+    .wide { grid-column: 1 / -1; }
+    input, select, textarea { font: inherit; color: var(--ink); padding: 8px 10px;
+           border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+    input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
+           outline: 3px solid var(--ball); outline-offset: 1px; }
+    .actions { display: flex; gap: 8px; align-items: center; }
+    button { font: inherit; cursor: pointer; padding: 8px 16px; border-radius: 4px;
+             border: 1px solid var(--court); background: transparent; color: var(--court); }
+    button.primary { background: var(--ball); border-color: var(--ball); color: var(--ink); font-weight: 600; }
+    button.danger { border-color: var(--danger); color: var(--danger); }
+    #status { min-height: 1.4em; font-size: .9rem; color: var(--danger); }
+
+    ul { list-style: none; margin: 0; padding: 0; }
+    li { display: grid; grid-template-columns: 90px 1fr auto auto; gap: 16px; align-items: center;
+         padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .date { color: var(--muted); font-size: .9rem; }
+    .opponent { font-weight: 600; }
+    .meta { color: var(--muted); font-size: .85rem; }
+    .score { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .empty { color: var(--muted); padding: 16px 0; }
+    @media (max-width: 640px) {
+      form { grid-template-columns: 1fr; }
+      li { grid-template-columns: 1fr auto; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TennisLog</h1>
+    <p>Histórico das suas partidas e treinos.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2 id="form-title">Nova partida</h2>
+      <form id="match-form">
+        <label>Data <input type="date" id="matchDate" required></label>
+        <label>Adversário <input type="text" id="opponent" maxlength="100" required></label>
+        <label>Placar <input type="text" id="score" maxlength="30" placeholder="6-4 3-6 7-5" required></label>
+        <label>Piso
+          <select id="surface">
+            <option value="">Não informado</option>
+            <option>Saibro</option><option>Rápida</option><option>Grama</option><option>Carpete</option>
+          </select>
+        </label>
+        <label class="wide">Observações <textarea id="notes" rows="2" maxlength="500"></textarea></label>
+        <div class="actions wide">
+          <button type="submit" class="primary" id="submit-btn">Salvar partida</button>
+          <button type="button" id="cancel-btn" hidden>Cancelar edição</button>
+          <span id="status" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </section>
+
+    <section>
+      <h2>Partidas</h2>
+      <ul id="match-list"></ul>
+    </section>
+  </main>
+
+  <script>
+    // Relative URL: nginx forwards /api/* to the backend, so no CORS or hardcoded host.
+    const API_URL = "api/matches";
+    const $ = (id) => document.getElementById(id);
+    const FIELDS = ["matchDate", "opponent", "score", "surface", "notes"];
+    let editingId = null;
+
+    /** Fetches all matches and redraws the list (textContent only, so no HTML injection). */
+    async function loadMatches() {
+      const list = $("match-list");
+      list.replaceChildren();
+      let matches;
+      try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error();
+        matches = await res.json();
+      } catch {
+        setStatus("Não foi possível carregar as partidas. Verifique se a API está no ar.");
+        return;
+      }
+      if (matches.length === 0) {
+        const empty = document.createElement("li");
+        empty.className = "empty";
+        empty.textContent = "Nenhuma partida registrada. Preencha o formulário para adicionar a primeira.";
+        list.append(empty);
+        return;
+      }
+      matches.forEach((m) => list.append(renderMatch(m)));
+    }
+
+    function renderMatch(m) {
+      const li = document.createElement("li");
+      const date = el("span", "date", new Date(m.matchDate + "T00:00:00").toLocaleDateString("pt-BR"));
+      const info = el("div");
+      info.append(el("div", "opponent", m.opponent));
+      const meta = [m.surface, m.notes].filter(Boolean).join(" - ");
+      if (meta) info.append(el("div", "meta", meta));
+      const score = el("span", "score", m.score);
+      const actions = el("div", "actions");
+      const edit = el("button", "", "Editar");
+      edit.onclick = () => startEdit(m);
+      const del = el("button", "danger", "Excluir");
+      del.onclick = () => removeMatch(m);
+      actions.append(edit, del);
+      li.append(date, info, score, actions);
+      return li;
+    }
+
+    function el(tag, cls = "", text = "") {
+      const node = document.createElement(tag);
+      if (cls) node.className = cls;
+      node.textContent = text;
+      return node;
+    }
+
+    function setStatus(msg) { $("status").textContent = msg; }
+
+    function startEdit(m) {
+      editingId = m.id;
+      FIELDS.forEach((f) => { $(f).value = m[f] ?? ""; });
+      $("form-title").textContent = "Editar partida";
+      $("submit-btn").textContent = "Salvar alterações";
+      $("cancel-btn").hidden = false;
+      $("opponent").focus();
+    }
+
+    function resetForm() {
+      editingId = null;
+      $("match-form").reset();
+      $("form-title").textContent = "Nova partida";
+      $("submit-btn").textContent = "Salvar partida";
+      $("cancel-btn").hidden = true;
+      setStatus("");
+    }
+
+    async function removeMatch(m) {
+      if (!confirm(`Excluir a partida contra ${m.opponent}?`)) return;
+      const res = await fetch(`${API_URL}/${m.id}`, { method: "DELETE" });
+      if (!res.ok) { setStatus("Não foi possível excluir a partida."); return; }
+      if (editingId === m.id) resetForm();
+      loadMatches();
+    }
+
+    $("match-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const body = Object.fromEntries(FIELDS.map((f) => [f, $(f).value || null]));
+      const res = await fetch(editingId ? `${API_URL}/${editingId}` : API_URL, {
+        method: editingId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        // 400 responses carry { errors: { field: [messages] } }
+        const problem = await res.json().catch(() => null);
+        const first = problem?.errors && Object.values(problem.errors).flat()[0];
+        setStatus(first ?? "Não foi possível salvar a partida.");
+        return;
+      }
+      resetForm();
+      loadMatches();
+    });
+
+    $("cancel-btn").addEventListener("click", resetForm);
+    loadMatches();
+  </script>
+</body>
+</html>
