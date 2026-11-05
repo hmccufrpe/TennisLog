@@ -1,14 +1,12 @@
-# Proposta Inicial: TennisLog (Fase 0)
-
 ## 1. Problema e aplicação
 Jogadores e treinadores amadores registram partidas e treinos em planilhas ou
 mensagens, sem histórico consultável. O **TennisLog** é uma aplicação simples
 para cadastrar, listar, editar e remover partidas (CRUD), com campos como data,
 adversário, placar, superfície e observações.
 
-**Escopo (pequeno e fechado):**
+**Escopo:**
 - Frontend: página única (lista + formulário).
-- Backend: API REST em ASP.NET Core (`/matches`, `/health`, `/metrics`) com EF Core + Npgsql.
+- Backend: API REST em ASP.NET Core com EF Core + Npgsql.
 - Banco: PostgreSQL com a tabela `matches`.
 
 **Fora do escopo:** autenticação social, estatísticas avançadas, app mobile.
@@ -45,11 +43,3 @@ duas zonas de disponibilidade.
 | GitHub Actions | CI/CD | Secrets do repositório | Pipeline por PR | Testes e lint automáticos | Deploy automatizado |
 | Prometheus + Grafana | Observabilidade | Acesso restrito | Coleta por scrape | Dashboards versionados | Alertas de indisponibilidade |
 | ALB | Entrada | TLS, security groups | Distribui carga | Gerenciado | Health checks |
-
-## 4. Repositório
-Estrutura criada: `app/`, `infra/`, `.github/workflows/`, `ansible/`,
-`observability/`, `docs/`. Ver `README.md`.
-
-## 5. Próximas fases (previsão)
-Fase 1: app (.NET) + Docker; Fase 2: infra (Terraform); Fase 3: CI/CD e Ansible;
-Fase 4: observabilidade.
