@@ -8,7 +8,7 @@ adversário, placar, superfície e observações.
 
 **Escopo (pequeno e fechado):**
 - Frontend: página única (lista + formulário).
-- Backend: API REST (`/matches`, `/health`, `/metrics`).
+- Backend: API REST em ASP.NET Core (`/matches`, `/health`, `/metrics`) com EF Core + Npgsql.
 - Banco: PostgreSQL com a tabela `matches`.
 
 **Fora do escopo:** autenticação social, estatísticas avançadas, app mobile.
@@ -18,8 +18,8 @@ adversário, placar, superfície e observações.
 ```mermaid
 flowchart LR
   U[Usuário] -->|HTTPS| ALB[Application Load Balancer]
-  ALB --> EC2A[EC2 A: Nginx + FastAPI]
-  ALB --> EC2B[EC2 B: Nginx + FastAPI]
+  ALB --> EC2A[EC2 A: Nginx + ASP.NET Core]
+  ALB --> EC2B[EC2 B: Nginx + ASP.NET Core]
   EC2A --> RDS[(RDS PostgreSQL)]
   EC2B --> RDS
   EC2A -.métricas.-> PROM[Prometheus + Grafana]
@@ -36,7 +36,7 @@ duas zonas de disponibilidade.
 
 | Tecnologia | Papel | Segurança | Escalabilidade | Manutenção | Disponibilidade |
 |---|---|---|---|---|---|
-| FastAPI (Python) | Backend | Validação com Pydantic | Stateless, escala horizontal | Código curto, OpenAPI automática | Endpoint `/health` |
+| ASP.NET Core 8 (C#) | Backend | Validação com Data Annotations, autenticação integrada | Stateless, escala horizontal, alto desempenho | Entity Framework Core, Swagger/OpenAPI, testes com xUnit | Health Checks nativos em `/health` |
 | HTML/JS + Nginx | Frontend | Cabeçalhos de segurança, TLS | Estático, fácil de cachear | Sem build complexo | Servido em múltiplas instâncias |
 | PostgreSQL (RDS) | Banco | Sub-rede privada, criptografia em repouso | Réplicas de leitura | Backups e patches gerenciados | Multi-AZ |
 | Docker | Empacotamento | Imagem mínima, sem root | Réplicas idênticas | Ambiente reproduzível | Rollback por tag |
@@ -51,5 +51,5 @@ Estrutura criada: `app/`, `infra/`, `.github/workflows/`, `ansible/`,
 `observability/`, `docs/`. Ver `README.md`.
 
 ## 5. Próximas fases (previsão)
-Fase 1: app + Docker; Fase 2: infra (Terraform); Fase 3: CI/CD e Ansible;
+Fase 1: app (.NET) + Docker; Fase 2: infra (Terraform); Fase 3: CI/CD e Ansible;
 Fase 4: observabilidade.

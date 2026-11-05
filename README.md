@@ -6,7 +6,7 @@ API REST + tela web para registrar partidas e treinos de tênis (projeto de Comp
 
 | Pasta | Conteúdo |
 |---|---|
-| `app/` | Backend (FastAPI) e frontend (HTML/JS estático) |
+| `app/` | Backend (ASP.NET Core, C#) e frontend (HTML/JS estático) |
 | `infra/` | IaC (Terraform): rede, EC2, RDS, security groups |
 | `.github/workflows/` | Pipelines CI/CD (GitHub Actions) |
 | `ansible/` | Playbooks de configuração e deploy das instâncias |
