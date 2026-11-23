@@ -2,8 +2,8 @@ terraform {
   required_version = ">= 1.10"
 
   required_providers {
-    aws    = { source = "hashicorp/aws", version = "~> 5.80" }
-    random = { source = "hashicorp/random", version = "~> 3.6" }
+    aws       = { source = "hashicorp/aws", version = "~> 5.80" }
+    infisical = { source = "infisical/infisical", version = "~> 0.16" }
   }
 
   # Remote state in S3 with native locking (use_lockfile, Terraform >= 1.10).

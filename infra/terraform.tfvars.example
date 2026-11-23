@@ -9,3 +9,6 @@ db_instance_class = "db.t3.micro"
 # Personal AWS account: set true to create the least-privilege role from iam.tf.
 create_iam_resources  = false
 instance_profile_name = "LabInstanceProfile"
+
+# Infisical project ID (Project Settings > General). Not a secret.
+infisical_workspace_id = "00000000-0000-0000-0000-000000000000"
