@@ -7,6 +7,12 @@ exec > >(tee -a /var/log/tennislog-userdata.log) 2>&1
 dnf install -y docker
 systemctl enable --now docker
 
+# Alloy config (observability/alloy/config.alloy): ships the container logs to Loki.
+mkdir -p /opt/tennislog
+cat > /opt/tennislog/config.alloy <<'ALLOY'
+${alloy_config}
+ALLOY
+
 cat > /opt/tennislog-deploy.sh <<'DEPLOY'
 #!/bin/bash
 # Idempotent deploy: pulls the images from ECR and (re)starts both containers.
@@ -34,11 +40,35 @@ docker network inspect tennislog >/dev/null 2>&1 || docker network create tennis
 docker rm -f frontend backend >/dev/null 2>&1 || true
 
 # RDS (PostgreSQL 16) enforces TLS by default, hence SSL Mode=Require.
-docker run -d --name backend --network tennislog --restart unless-stopped \
+# Port 8080 is published for Prometheus; the security group opens it only to the monitoring host.
+docker run -d --name backend --network tennislog --restart unless-stopped -p 8080:8080 \
   -e "ConnectionStrings__Default=Host=${db_host};Port=5432;Database=${db_name};Username=${db_user};Password=$DB_PASSWORD;SSL Mode=Require;Trust Server Certificate=true" \
   "$BACKEND_IMAGE"
 docker run -d --name frontend --network tennislog --restart unless-stopped \
   -p 80:80 "$FRONTEND_IMAGE"
+
+# Log shipping, only once the monitoring instance exists (its Loki URL is in SSM).
+LOKI_URL=$(aws ssm get-parameter --region "$REGION" --name "${loki_url_param}" \
+  --query Parameter.Value --output text 2>/dev/null || true)
+if [ -n "$LOKI_URL" ]; then
+  docker rm -f alloy >/dev/null 2>&1 || true
+  docker run -d --name alloy --restart unless-stopped \
+    -e "LOKI_URL=$LOKI_URL" -e "HOST=$(hostname)" \
+    -v /var/run/docker.sock:/var/run/docker.sock:ro \
+    -v /opt/tennislog/config.alloy:/etc/alloy/config.alloy:ro \
+    grafana/alloy:v1.22.0 run /etc/alloy/config.alloy
+else
+  echo "Loki URL not found in SSM; skipping Alloy."
+fi
+
+# Succeed only when this host answers (nginx -> API -> database); the pipeline relies on it.
+for i in $(seq 1 30); do
+  if curl -sf http://localhost/api/health; then echo " ($TAG)"; exit 0; fi
+  sleep 2
+done
+echo "Health check failed for $TAG" >&2
+docker logs --tail 50 backend >&2
+exit 1
 DEPLOY
 chmod +x /opt/tennislog-deploy.sh
 

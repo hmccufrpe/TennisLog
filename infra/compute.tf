@@ -28,6 +28,8 @@ resource "aws_instance" "app" {
     db_name           = var.db_name
     db_user           = var.db_username
     db_password_param = aws_ssm_parameter.db_password.name
+    loki_url_param    = "/${var.project}/monitoring/loki-url" # see monitoring.tf
+    alloy_config      = file("${path.module}/../observability/alloy/config.alloy")
   })
   user_data_replace_on_change = true
 
@@ -46,7 +48,8 @@ resource "aws_instance" "app" {
     ignore_changes = [ami]
   }
 
-  tags = { Name = "${var.project}-app-${count.index + 1}" }
+  # Role=app: the deploy (SSM) targets only these hosts, not the monitoring one.
+  tags = { Name = "${var.project}-app-${count.index + 1}", Role = "app" }
 }
 
 resource "aws_lb" "main" {

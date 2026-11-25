@@ -2,7 +2,7 @@
 # In AWS Academy Learner Lab IAM creation is blocked, so the hosts use the pre-created
 # LabInstanceProfile instead (see docs/decisoes-tecnicas.md).
 # The role grants only: SSM access (no SSH keys), pulling the two ECR images and
-# reading the DB password parameter.
+# reading the project's three SSM parameters. Both app and monitoring hosts use it.
 
 locals {
   instance_profile_name = var.create_iam_resources ? aws_iam_instance_profile.app[0].name : var.instance_profile_name
@@ -49,9 +49,13 @@ data "aws_iam_policy_document" "app" {
   }
 
   statement {
-    sid       = "ReadDbPassword"
-    actions   = ["ssm:GetParameter"]
-    resources = [aws_ssm_parameter.db_password.arn]
+    sid     = "ReadParameters"
+    actions = ["ssm:GetParameter"]
+    resources = [
+      aws_ssm_parameter.db_password.arn,
+      aws_ssm_parameter.grafana_password.arn,
+      aws_ssm_parameter.loki_url.arn,
+    ]
   }
 
   # SecureString uses the AWS managed key; allow decrypt only when called through SSM.

@@ -1,0 +1,9 @@
+apiVersion: 1
+
+providers:
+  - name: tennislog
+    folder: TennisLog
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/provisioning/dashboards

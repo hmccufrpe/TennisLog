@@ -12,3 +12,7 @@ instance_profile_name = "LabInstanceProfile"
 
 # Infisical project ID (Project Settings > General). Not a secret.
 infisical_workspace_id = "00000000-0000-0000-0000-000000000000"
+
+# Your public IP, the only one allowed to open Grafana and Prometheus.
+# Find it with: curl -s https://checkip.amazonaws.com
+admin_cidr = "203.0.113.10/32"

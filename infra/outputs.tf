@@ -26,5 +26,5 @@ output "instance_ids" {
 
 output "deploy_command" {
   description = "Reruns the deploy script on every app instance through SSM Run Command."
-  value       = "aws ssm send-command --region ${var.aws_region} --document-name AWS-RunShellScript --targets Key=tag:Project,Values=${var.project} --parameters commands=/opt/tennislog-deploy.sh --query Command.CommandId --output text"
+  value       = "aws ssm send-command --region ${var.aws_region} --document-name AWS-RunShellScript --targets Key=tag:Project,Values=${var.project} Key=tag:Role,Values=app --parameters commands=/opt/tennislog-deploy.sh --query Command.CommandId --output text"
 }

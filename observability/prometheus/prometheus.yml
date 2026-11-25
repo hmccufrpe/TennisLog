@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  # App hosts (backend port 8080). targets.json is rendered by Terraform with the
+  # private IPs of the instances; Prometheus reloads it on change.
+  - job_name: tennislog-api
+    file_sd_configs:
+      - files: [/etc/prometheus/targets.json]
