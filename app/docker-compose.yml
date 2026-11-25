@@ -1,5 +1,5 @@
 # Local stack: PostgreSQL + ASP.NET Core API + Nginx frontend.
-# Usage: cp .env.example .env && docker compose up --build
+# Usage: infisical run --env=dev -- docker compose up --build   (or cp .env.example .env)
 services:
   db:
     image: postgres:16-alpine
@@ -23,14 +23,14 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "8080:8080"   # Swagger (/swagger), /health and /metrics
+      - "8088:8080"   # Swagger (/swagger), /health and /metrics
 
   frontend:
     build: ./frontend
     depends_on:
       - backend
     ports:
-      - "3000:80"
+      - "3080:80"
 
 volumes:
   pgdata:

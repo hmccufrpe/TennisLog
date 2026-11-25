@@ -1,0 +1,29 @@
+# Manual check (Fase 3): reads the secrets from Infisical with the machine identity
+# and shows that GitHub masks them in the logs.
+# Needs the repo secrets INFISICAL_CLIENT_ID and INFISICAL_CLIENT_SECRET.
+name: infisical-check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Load secrets from Infisical
+        uses: Infisical/secrets-action@v1.0.18
+        with:
+          method: universal
+          client-id: ${{ secrets.INFISICAL_CLIENT_ID }}
+          client-secret: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          project-id: b0a30f00-7056-473b-9c2f-dec43a07998c # same as .infisical.yaml; not a secret
+          env-slug: prod # the environment Terraform reads
+
+      - name: Verify secret and masking
+        run: |
+          test -n "$POSTGRES_PASSWORD" || { echo "POSTGRES_PASSWORD is missing"; exit 1; }
+          echo "POSTGRES_PASSWORD is set"
+          echo "Mask test: $POSTGRES_PASSWORD"

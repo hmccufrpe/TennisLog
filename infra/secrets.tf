@@ -1,8 +1,7 @@
 # Secrets come from Infisical, never from the repository.
-# Terraform authenticates with a machine identity (Universal Auth). Export the
-# credentials before running it (they are sensitive, so keep them out of tfvars):
-#   export TF_VAR_infisical_client_id="..."
-#   export TF_VAR_infisical_client_secret="..."
+# Terraform authenticates with a machine identity (Universal Auth). Its credentials
+# are kept in Infisical (prod, folder /ci) and injected as TF_VAR_* by the CLI:
+#   infisical run --env=prod --path=/ci -- terraform apply
 
 variable "infisical_client_id" {
   description = "Client ID of the Infisical machine identity."
