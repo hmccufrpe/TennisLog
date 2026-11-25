@@ -91,7 +91,9 @@ public class MatchesApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var created = await CreateAsync();
         var response = await _client.PutAsJsonAsync($"/matches/{created.Id}", new
         {
-            matchDate = "2026-11-02", opponent = "Bia", score = "7-5 6-4"
+            matchDate = "2026-11-02",
+            opponent = "Bia",
+            score = "7-5 6-4"
         });
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 

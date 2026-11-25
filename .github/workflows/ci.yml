@@ -1,0 +1,48 @@
+# Fase 4 - CI: lint (C# and Terraform) and automated tests.
+# Any failure turns the run red; deploy.yml reuses this workflow and only deploys
+# after it passes, so a broken test blocks the deploy.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main] # pushes to main run through deploy.yml, which calls this file
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (lint + testes)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Lint (dotnet format)
+        run: |
+          dotnet format TennisLog.Api/TennisLog.Api.csproj --verify-no-changes
+          dotnet format TennisLog.Tests/TennisLog.Tests.csproj --verify-no-changes
+
+      - name: Testes (xUnit)
+        run: dotnet test TennisLog.Tests --logger "console;verbosity=normal"
+
+  terraform:
+    name: Terraform (fmt + validate)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false -input=false
+      - run: terraform validate

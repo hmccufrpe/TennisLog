@@ -1,0 +1,98 @@
+# Fase 4 - CD: every push to main runs the CI first; only if it passes, the images
+# are built and pushed to ECR (tag = commit SHA and latest), deployed to the app
+# hosts through SSM (one host at a time) and checked on the ALB.
+#
+# Secrets: GitHub holds only the Infisical machine identity. The AWS Learner Lab
+# credentials come from Infisical (prod, folder /ci), refreshed every lab session
+# with infra/bootstrap/lab-creds.sh.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  PROJECT: tennislog
+  TAG: ${{ github.sha }}
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Load secrets from Infisical
+        uses: Infisical/secrets-action@v1.0.18
+        with:
+          method: universal
+          client-id: ${{ secrets.INFISICAL_CLIENT_ID }}
+          client-secret: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          project-id: b0a30f00-7056-473b-9c2f-dec43a07998c # same as .infisical.yaml; not a secret
+          env-slug: prod
+          secret-path: /ci
+
+      - name: Check AWS credentials
+        run: aws sts get-caller-identity --query Arn --output text
+
+      - name: Log in to ECR
+        run: |
+          REGISTRY="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_REGION.amazonaws.com"
+          echo "REGISTRY=$REGISTRY" >> "$GITHUB_ENV"
+          aws ecr get-login-password | docker login --username AWS --password-stdin "$REGISTRY"
+
+      - name: Build and push images
+        run: |
+          for svc in backend frontend; do
+            IMAGE="$REGISTRY/$PROJECT-$svc"
+            docker build -t "$IMAGE:$TAG" -t "$IMAGE:latest" "app/$svc"
+            docker push --all-tags "$IMAGE"
+          done
+
+      - name: Deploy to the app hosts (SSM Run Command)
+        run: |
+          CMD_ID=$(aws ssm send-command --document-name AWS-RunShellScript \
+            --targets "Key=tag:Project,Values=$PROJECT" "Key=tag:Role,Values=app" \
+            --parameters "{\"commands\":[\"/opt/tennislog-deploy.sh $TAG\"]}" \
+            --max-concurrency 1 --max-errors 0 --comment "deploy $TAG" \
+            --query Command.CommandId --output text)
+          echo "SSM command: $CMD_ID"
+
+          for i in $(seq 1 60); do
+            STATUSES=$(aws ssm list-command-invocations --command-id "$CMD_ID" \
+              --query 'CommandInvocations[].Status' --output text)
+            echo "[$i] ${STATUSES:-waiting}"
+            if [ -n "$STATUSES" ] && ! grep -qE 'Pending|InProgress|Delayed' <<< "$STATUSES"; then break; fi
+            sleep 10
+          done
+
+          aws ssm list-command-invocations --command-id "$CMD_ID" --details --output text \
+            --query 'CommandInvocations[].[InstanceId,Status,CommandPlugins[0].Output]'
+
+          TOTAL=$(aws ssm list-command-invocations --command-id "$CMD_ID" \
+            --query 'length(CommandInvocations)' --output text)
+          OK=$(aws ssm list-command-invocations --command-id "$CMD_ID" \
+            --query "length(CommandInvocations[?Status=='Success'])" --output text)
+          echo "$OK/$TOTAL hosts deployed"
+          [ "$TOTAL" -gt 0 ] && [ "$OK" -eq "$TOTAL" ]
+
+      - name: Check /api/health through the ALB
+        run: |
+          ALB=$(aws elbv2 describe-load-balancers --names "$PROJECT-alb" \
+            --query 'LoadBalancers[0].DNSName' --output text)
+          curl --fail --silent --show-error --retry 10 --retry-delay 15 --retry-all-errors \
+            "http://$ALB/api/health"
+          echo
+          echo "Deploy de \`$TAG\` concluído: http://$ALB" >> "$GITHUB_STEP_SUMMARY"
