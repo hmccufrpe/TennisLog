@@ -9,20 +9,20 @@ O guia de uso está no [README](../README.md).
 |---|---|---|---|
 | 0. Definição | entregável 1 | Proposta pronta | Falta registrar a aprovação do professor e preencher a divisão de tarefas |
 | 1. Aplicação local | 25% (+10% testes) | Pronto | Sim: compose local com segredos do Infisical, 8 testes passando |
-| 2. Infraestrutura | 15% + 20% | Pronto | `terraform validate` ok; falta `apply`/`destroy` com prints |
-| 3. Segredos | 5% | Pronto | Infisical local ok, `gitleaks` sem achados; falta Terraform e `infisical-check` no GitHub |
-| 4. CI/CD | 15% | Pronto (`ci.yml`, `deploy.yml`) | `actionlint`, lint e testes ok localmente; falta rodar no GitHub |
-| 5. Observabilidade | 5% | Pronto (`observability/`, `monitoring.tf`) | Stack testada localmente (alvo `up`, logs no Loki, dashboard provisionado); falta na AWS |
+| 2. Infraestrutura | 15% + 20% | Pronto | `apply` ok em 25/11 (40 recursos); falta `destroy` e prints |
+| 3. Segredos | 5% | Pronto | Infisical local, Terraform (RDS e Grafana) e pipeline ok, `gitleaks` sem achados; falta rodar o `infisical-check` |
+| 4. CI/CD | 15% | Pronto (`ci.yml`, `deploy.yml`) | Execução com sucesso ok; falta a execução com falha |
+| 5. Observabilidade | 5% | Pronto (`observability/`, `monitoring.tf`) | Na AWS: 2 alvos `up`, dashboard provisionado, logs das 2 instâncias no Loki; faltam prints |
 | 6. Documentação | 5% | README, decisões técnicas e segurança | Falta a demonstração |
 
 ## Preparação (uma vez)
 
-- [ ] Machine identity no Infisical: copiar o **Client ID** e gerar um **Client Secret** (Access Control → Identities → Universal Auth).
-- [ ] Cadastrar no Infisical, ambiente `prod`:
+- [x] Machine identity no Infisical: copiar o **Client ID** e gerar um **Client Secret** (Access Control → Identities → Universal Auth).
+- [x] Cadastrar no Infisical, ambiente `prod`:
   - em `/`: `GF_SECURITY_ADMIN_PASSWORD` (ex.: `openssl rand -hex 16`);
   - em `/ci`: `TF_VAR_infisical_client_id` e `TF_VAR_infisical_client_secret`.
-- [ ] No GitHub (dono do repositório): secrets `INFISICAL_CLIENT_ID` e `INFISICAL_CLIENT_SECRET`.
-- [ ] `infra/terraform.tfvars` com `infisical_workspace_id` e `admin_cidr`.
+- [x] No GitHub (dono do repositório): secrets `INFISICAL_CLIENT_ID` e `INFISICAL_CLIENT_SECRET`.
+- [x] `infra/terraform.tfvars` com `infisical_workspace_id` e `admin_cidr`.
 
 ## Sessão de validação (com o lab ligado)
 
@@ -35,10 +35,10 @@ Siga o README, seção "Implantar na AWS", e tire os prints de cada item.
 - [ ] Actions → **infisical-check** → Run workflow: log com `POSTGRES_PASSWORD is set` e `Mask test: ***`.
 
 **Fase 4: pipeline (entregável 3)**
-- [ ] Execução **com sucesso**: push na `main` → `ci` verde → `deploy` verde → `Healthy` no resumo.
+- [x] Execução **com sucesso**: push na `main` → `ci` verde → `deploy` verde → `Healthy` no resumo.
 - [ ] Execução **com falha**: commit que quebra um teste (ex.: trocar `"Ana"` por `"X"` em `Create_PersistsAndIsReturnedByGet`) → `ci` vermelho → `deploy` pulado. Depois, `git revert` e novo push.
 - [ ] Guardar os links das duas execuções aqui:
-  - sucesso: _(link)_
+  - sucesso: https://github.com/hmccufrpe/TennisLog/actions/runs/45731551729
   - falha: _(link)_
 
 **Fase 5: observabilidade**
