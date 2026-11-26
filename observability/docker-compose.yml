@@ -12,7 +12,7 @@ services:
       - ./prometheus:/etc/prometheus:ro
       - prometheus-data:/prometheus
     ports:
-      - "9090:9090"
+      - "3001:9090" # host 3001: many networks block outbound 9090
     restart: unless-stopped
 
   loki:

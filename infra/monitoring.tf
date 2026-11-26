@@ -9,7 +9,7 @@ variable "monitoring_instance_type" {
 }
 
 variable "admin_cidr" {
-  description = "CIDR allowed to open Grafana (3000) and Prometheus (9090), e.g. your IP: \"203.0.113.10/32\"."
+  description = "CIDR allowed to open Grafana (3000) and Prometheus (3001), e.g. your IP: \"203.0.113.10/32\"."
   type        = string
 
   validation {
@@ -45,8 +45,8 @@ resource "aws_vpc_security_group_ingress_rule" "prometheus_from_admin" {
   security_group_id = aws_security_group.monitoring.id
   cidr_ipv4         = var.admin_cidr
   ip_protocol       = "tcp"
-  from_port         = 9090
-  to_port           = 9090
+  from_port         = 3001
+  to_port           = 3001
 }
 
 resource "aws_vpc_security_group_ingress_rule" "loki_from_app" {
@@ -127,5 +127,5 @@ output "grafana_url" {
 }
 
 output "prometheus_url" {
-  value = "http://${aws_instance.monitoring.public_ip}:9090"
+  value = "http://${aws_instance.monitoring.public_ip}:3001"
 }

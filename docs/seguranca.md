@@ -22,7 +22,7 @@
 | Instâncias de aplicação | RDS | 5432 |
 | Monitoramento | Instâncias de aplicação (`/metrics`) | 8080 |
 | Instâncias de aplicação | Loki | 3100 |
-| `admin_cidr` (seu IP) | Grafana / Prometheus | 3000 / 9090 |
+| `admin_cidr` (seu IP) | Grafana / Prometheus | 3000 / 3001 |
 
 - RDS em sub-rede privada, sem rota para a internet e `publicly_accessible = false`.
 - Nenhuma porta 22: acesso e deploy por SSM.

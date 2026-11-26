@@ -34,7 +34,7 @@ flowchart LR
   A1 & A2 -->|5432| RDS
   MON -->|"scrape :8080/metrics"| A1 & A2
   A1 & A2 -->|"logs :3100"| MON
-  ADM[Seu IP] -->|3000 / 9090| MON
+  ADM[Seu IP] -->|3000 / 3001| MON
   GH[GitHub Actions] -->|build e push| ECR[(ECR)]
   GH -->|SSM Run Command| A1 & A2
   ECR -->|pull| A1 & A2
