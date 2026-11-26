@@ -194,7 +194,9 @@ Nunca clique em **Reset** no Learner Lab: isso apaga o bucket do state.
 
 ## Divisão de tarefas
 
-| Integrante | Responsabilidades |
-|---|---|
-| _(nome)_ | _(preencher)_ |
-| _(nome)_ | _(preencher)_ |
+| Integrante | Fases | Responsabilidades |
+|---|---|---|
+| Higor Matheus | 0 e 2 | Proposta e arquitetura; Terraform: rede (VPC, sub-redes, security groups), EC2, ALB, RDS, ECR e state remoto no S3 |
+| Rafael Rodrigues | 1 e 5 | API em ASP.NET Core, frontend, testes xUnit e Dockerfiles; observabilidade: Prometheus, Loki, Grafana (dashboards) e Alloy |
+| Cauã Bittencourt | 3 e 4 | Segredos com Infisical (local, Terraform e pipeline); CI/CD no GitHub Actions: lint, testes, build, push no ECR e deploy via SSM |
+| Todos | 6 | Documentação da própria parte (README, decisões técnicas e segurança) e apresentação dela na demonstração |

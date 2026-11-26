@@ -7,7 +7,7 @@ O guia de uso está no [README](../README.md).
 
 | Fase | Peso | Código | Validado |
 |---|---|---|---|
-| 0. Definição | entregável 1 | Proposta pronta | Falta registrar a aprovação do professor e preencher a divisão de tarefas |
+| 0. Definição | entregável 1 | Proposta e divisão de tarefas prontas | Falta registrar a aprovação do professor |
 | 1. Aplicação local | 25% (+10% testes) | Pronto | Sim: compose local com segredos do Infisical, 8 testes passando |
 | 2. Infraestrutura | 15% + 20% | Pronto | `apply` ok em 25/11 (40 recursos); falta `destroy` e prints |
 | 3. Segredos | 5% | Pronto | Infisical local, Terraform (RDS e Grafana) e pipeline ok, `gitleaks` sem achados; falta rodar o `infisical-check` |
@@ -51,7 +51,7 @@ Siga o README, seção "Implantar na AWS", e tire os prints de cada item.
 
 ## Fase 0
 
-- [ ] Divisão de tarefas no README.
+- [x] Divisão de tarefas no README.
 - [ ] Aprovação da proposta: data ____ / observações do professor: ____
 
 ## Demonstração (roteiro)
