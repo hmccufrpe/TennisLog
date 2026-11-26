@@ -67,7 +67,7 @@ public class MatchesApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
     {
         var created = await CreateAsync("Ana");
         var fetched = await _client.GetFromJsonAsync<Match>($"/matches/{created.Id}");
-        Assert.Equal("Ana", fetched!.Opponent);
+        Assert.Equal("X", fetched!.Opponent); // quebrado de propósito: evidência de pipeline com falha
         Assert.Equal(new DateOnly(2026, 11, 1), fetched.MatchDate);
     }
 
