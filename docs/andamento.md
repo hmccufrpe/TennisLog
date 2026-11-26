@@ -11,7 +11,7 @@ O guia de uso está no [README](../README.md).
 | 1. Aplicação local | 25% (+10% testes) | Pronto | Sim: compose local com segredos do Infisical, 8 testes passando |
 | 2. Infraestrutura | 15% + 20% | Pronto | `apply` ok em 25/11 (40 recursos); falta `destroy` e prints |
 | 3. Segredos | 5% | Pronto | Infisical local, Terraform (RDS e Grafana) e pipeline ok, `gitleaks` sem achados; falta rodar o `infisical-check` |
-| 4. CI/CD | 15% | Pronto (`ci.yml`, `deploy.yml`) | Execução com sucesso ok; falta a execução com falha |
+| 4. CI/CD | 15% | Pronto (`ci.yml`, `deploy.yml`) | Execuções com sucesso e com falha registradas (links abaixo); faltam prints |
 | 5. Observabilidade | 5% | Pronto (`observability/`, `monitoring.tf`) | Na AWS: 2 alvos `up`, dashboard provisionado, logs das 2 instâncias no Loki; faltam prints |
 | 6. Documentação | 5% | README, decisões técnicas e segurança | Falta a demonstração |
 
@@ -36,10 +36,10 @@ Siga o README, seção "Implantar na AWS", e tire os prints de cada item.
 
 **Fase 4: pipeline (entregável 3)**
 - [x] Execução **com sucesso**: push na `main` → `ci` verde → `deploy` verde → `Healthy` no resumo.
-- [ ] Execução **com falha**: commit que quebra um teste (ex.: trocar `"Ana"` por `"X"` em `Create_PersistsAndIsReturnedByGet`) → `ci` vermelho → `deploy` pulado. Depois, `git revert` e novo push.
+- [x] Execução **com falha**: commit que quebra um teste (ex.: trocar `"Ana"` por `"X"` em `Create_PersistsAndIsReturnedByGet`) → `ci` vermelho → `deploy` pulado. Depois, `git revert` e novo push.
 - [ ] Guardar os links das duas execuções aqui:
   - sucesso: https://github.com/hmccufrpe/TennisLog/actions/runs/45731551729
-  - falha: _(link)_
+  - falha (teste quebrado, deploy pulado): https://github.com/hmccufrpe/TennisLog/actions/runs/45735975620
 
 **Fase 5: observabilidade**
 - [ ] Prometheus → Status → Targets: as duas instâncias `UP`.
