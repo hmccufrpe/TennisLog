@@ -114,6 +114,8 @@ cp infra/terraform.tfvars.example infra/terraform.tfvars
 
 ```bash
 # 1. Inicie o lab, abra "AWS Details > AWS CLI" e cole o bloco em ~/.aws/credentials
+#    (se o [default] já for de outra conta, cole como [tennislog-lab] e rode:
+#     export AWS_PROFILE=tennislog-lab AWS_REGION=us-east-1)
 bash infra/bootstrap/lab-creds.sh            # copia as credenciais para o Infisical (prod:/ci)
 
 # 2. Infraestrutura
